@@ -48,7 +48,7 @@ in {
             aico-printnode = {};
         };
 
-        systemd.services.printnode = {
+        systemd.services.print-node = {
             description = "PrintNode Client";
             after = [ "network.target" "cups.service" ];
             requires = [ "cups.service" ];

@@ -10,6 +10,8 @@
         gzip
         libcap
         zlib
+        pkgs.libgcc
+        pkgs.binutils
         pkgs.nix-ld
         pkgs.networkmanager
         pkgs.cups
