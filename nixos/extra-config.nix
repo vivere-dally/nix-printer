@@ -7,8 +7,9 @@
         vim
         wget
         git
-        tar
         gzip
+        libcap
+        zlib
         pkgs.nix-ld
         pkgs.networkmanager
         pkgs.cups
@@ -17,7 +18,7 @@
     programs.nix-ld.enable = true;
 
     nixpkgs.config.packageOverrides = pkgs: {
-        print-node = pkgs.callPackage ./print-node.nix { tar = pkgs.tar; };
+        print-node = pkgs.callPackage ./print-node.nix { tar = pkgs.gnutar; };
     };
     services.print-node = {
         enable = true;
@@ -38,8 +39,14 @@
 
     hardware.enableRedistributableFirmware = true;
 
-    networking.networkmanager.enable = true;
     networking.firewall.enable = true;
+    networking.networkmanager.enable = true;
+    networking.wireless.networks = {
+        "DIGI-tnV4" = {
+            psk = "yUPaJEkH3a";
+
+        };
+    };
 
     time.timeZone = "Europe/Zurich";
 

@@ -2,7 +2,7 @@
 let
     cfg = config.services.print-node;
 in {
-    options.services.printnode = {
+    options.services.print-node = {
         enable = lib.mkEnableOption "PrintNode service";
         package = lib.mkOption {
             type = lib.types.package;
