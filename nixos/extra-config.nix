@@ -20,7 +20,7 @@
     programs.nix-ld.enable = true;
 
     nixpkgs.config.packageOverrides = pkgs: {
-        print-node = pkgs.callPackage ./print-node.nix { tar = pkgs.gnutar; };
+        print-node = pkgs.callPackage ./print-node.nix { };
     };
     services.print-node = {
         enable = true;

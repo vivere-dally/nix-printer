@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, tar, autoPatchelfHook }:
+{ stdenv, lib, fetchurl, autoPatchelfHook }:
 stdenv.mkDerivation rec {
     pname = "PrintNode";
     version = "4.28.14";
@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     dontBuild = true;
     autoPatchelfIgnoreMissingDeps = [ "*" ];
     nativeBuildInputs = [ autoPatchelfHook ];
-    buildInputs = [ tar ];
+    buildInputs = [ ];
 
     unpackPhase = ''
         mkdir -p $pname
@@ -19,17 +19,14 @@ stdenv.mkDerivation rec {
     '';
 
     installPhase = ''
-        mkdir -p $out/usr/local
-        cp -r ${pname} $out/usr/local/${pname}
-
-
-        # <-- fix the RPATH so PrintNode can find its bundled .so files: -->
-        patchelf \
-            --set-rpath "\$ORIGIN/../usr/local/${pname}/lib" \
-            $out/usr/local/${pname}/PrintNode
-
         mkdir -p $out/bin
-        ln -s $out/usr/local/${pname}/PrintNode $out/bin/PrintNode
+        cp ${pname}/PrintNode $out/bin
+        cp ${pname}/udev-rule-generator $out/bin
+
+        mkdir -p $out/lib
+        cp -r ${pname}/lib/* $out/lib
+        cp -r ${pname}/platforms $out/lib
+        cp -r ${pname}/platformthemes $out/lib
     '';
 
     meta = with lib; {
