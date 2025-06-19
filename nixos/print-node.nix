@@ -1,9 +1,15 @@
 { stdenv
 , lib
 , fetchurl
+, autoPatchelfHook
 , patchelf
 , openssl
 , glibc
+, zlib
+, qt6
+, gtk3, pango, glib
+, libxkbcommon, libinput, tslib, mtdev, libdrm, libjpeg
+, libsystemd
 }:
 stdenv.mkDerivation rec {
     pname = "PrintNode";
@@ -17,8 +23,27 @@ stdenv.mkDerivation rec {
         sha1 = "39d3c89f29be97dc0a97a52a8779e7e571f22794";
     };
 
-    dontBuild = true;
-    buildInputs = [ openssl glibc stdenv.cc.cc.lib ];
+    nativeBuildInputs = [
+        autoPatchelfHook
+    ];
+
+    buildInputs = [
+        openssl
+        zlib
+        qt6.full
+        gtk3
+        pango
+        glib
+        libxkbcommon
+        libinput
+        tslib
+        mtdev
+        libdrm
+        libjpeg
+        libsystemd
+    ];
+
+    sourceRoot = ".";
 
     unpackPhase = ''
         mkdir -p $pname
@@ -26,6 +51,8 @@ stdenv.mkDerivation rec {
     '';
 
     installPhase = ''
+        runHook preInstall
+
         mkdir -p $out/bin
         cp ${pname}/PrintNode $out/bin
         cp ${pname}/udev-rule-generator $out/bin
@@ -35,7 +62,12 @@ stdenv.mkDerivation rec {
         cp -r ${pname}/platforms $out/lib
         cp -r ${pname}/platformthemes $out/lib
 
-        patchelf --set-rpath "\$ORIGIN/../lib" --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $out/bin/PrintNode
+        runHook postInstall
+
+    #     patchelf \
+    #         --set-rpath "\$ORIGIN/../lib:${lib.makeLibraryPath [ openssl glibc stdenv.cc.cc.lib ]}" \
+    #         --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+    #         $out/bin/PrintNode
     '';
 
     meta = with lib; {
