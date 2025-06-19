@@ -1,9 +1,14 @@
 { lib, stdenv, fetchurl, autoPatchelfHook, patchelf
+, glibc
 , openssl, zlib
-, qt6
-, gtk3, pango, glib, icu70, glibc
-, libxkbcommon, libinput, tslib, mtdev, libdrm, libjpeg_turbo
-, systemd
+, qt6 # Qt6Base, Network, Widgets, X11Extras, EglFS, etc.
+, gtk3, pango, glib
+, icu70 # provides libicui18n.so.70, libicuuc.so.70
+, libxkbcommon, libinput, tslib, mtdev, libdrm
+, libjpeg_turbo # provides libjpeg.so.8
+, systemd            # provides libsystemd.so, udev support
+, mesa              # provides libGL.so, libEGL.so
+, libX11, libxcb, libXrender, libXrandr
 }:
 
 stdenv.mkDerivation rec {
@@ -18,8 +23,9 @@ stdenv.mkDerivation rec {
         sha1 = "39d3c89f29be97dc0a97a52a8779e7e571f22794";
     };
 
-  nativeBuildInputs = [ autoPatchelfHook patchelf ];
+  nativeBuildInputs = [ patchelf autoPatchelfHook ];
   buildInputs       = [
+      mesa  libX11 libxcb libXrender libXrandr
       glibc
     openssl
     zlib
@@ -69,6 +75,9 @@ stdenv.mkDerivation rec {
       --set-interpreter "$(cat ${glibc}/nix-support/dynamic-linker)" \
       --set-rpath "\$ORIGIN/../lib" \
       $out/bin/udev-rule-generator
+
+    find $out/lib -type f -name "*.so*" ! -name "librt*" -exec \
+        patchelf --set-rpath "\$ORIGIN" {} \;
 
     runHook postInstall
   '';
