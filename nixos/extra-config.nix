@@ -10,11 +10,12 @@
         gzip
         libcap
         zlib
-        pkgs.libgcc
-        pkgs.binutils
-        pkgs.nix-ld
-        pkgs.networkmanager
-        pkgs.cups
+        zstd
+        libgcc
+        binutils
+        nix-ld
+        networkmanager
+        cups
         print-node
     ];
     programs.nix-ld.enable = true;
@@ -33,6 +34,11 @@
 
     # Print utils
     services.printing.enable = true;
+    services.cups = {
+      enable = true;
+      allowUserFromAnyGroup = true;
+      extraGroups = [ "lp" "scanner" ];
+    };
     services.avahi = {
       enable = true;
       nssmdns4 = true;
@@ -54,7 +60,7 @@
 
     users.users.aico-print = {
         isNormalUser = true;
-        extraGroups = [ "wheel" ];
+        extraGroups = [ "wheel" "lp" "scanner" ];
     };
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
