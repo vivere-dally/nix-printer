@@ -19,6 +19,16 @@
         cups-filters
         brotli
         print-node
+        # Add USB and printer debugging tools
+        usbutils
+        pciutils
+        udev
+        systemd
+        # Add printer-specific tools
+        foomatic-db
+        foomatic-db-engine
+        gutenprint
+        hplip
     ];
     programs.nix-ld.enable = true;
 
@@ -46,6 +56,7 @@
     };
 
     # Print utils
+    # harware.printers.enable = true;
     services.printing = {
         enable        = true;  # start CUPS
         openFirewall  = true;  # open TCP 631 for IPP :contentReference[oaicite:0]{index=0}
@@ -101,10 +112,43 @@
     hardware.printers = { ensurePrinters = []; };
     hardware.enableRedistributableFirmware = true;
 
-    # bluetooth
-    hardware.bluetooth.enable = true;
-    hardware.bluetooth.powerOnBoot = true;
-    services.blueman.enable = true;
+    # USB and udev configuration for printer detection
+    services.udev.extraRules = ''
+      # USB printer rules
+      SUBSYSTEM=="usb", ATTR{idVendor}=="0a5f", ATTR{idProduct}=="00d7", MODE="0666"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="0a5f", ATTR{idProduct}=="00d8", MODE="0666"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="0a5f", ATTR{idProduct}=="00d9", MODE="0666"
+      # Generic USB printer rule
+      SUBSYSTEM=="usb", ATTR{idVendor}=="*", ATTR{idProduct}=="*", MODE="0666"
+      # USB serial devices
+      SUBSYSTEM=="usb", ATTR{idVendor}=="*", ATTR{idProduct}=="*", MODE="0666"
+    '';
+
+    # Simple printer detection service
+    systemd.services.printer-detection = {
+      description = "Detect and setup USB printers";
+      after = [ "cups.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'echo \"Printer detection started\"; ${pkgs.cups}/bin/lpinfo -v | grep -i usb || echo \"No USB devices found\"'";
+        User = "root";
+        RemainAfterExit = true;
+      };
+    };
+
+    # Simple Zebra printer setup service
+    systemd.services.zebra-printer-setup = {
+      description = "Setup Zebra printer";
+      after = [ "cups.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'echo \"Zebra setup started\"; ${pkgs.cups}/bin/lpstat -p ZebraRaw >/dev/null 2>&1 && (${pkgs.cups}/bin/cupsenable ZebraRaw; ${pkgs.cups}/bin/cupsaccept ZebraRaw; echo \"ZebraRaw enabled\") || echo \"ZebraRaw not found\"'";
+        User = "root";
+        RemainAfterExit = true;
+      };
+    };
 
     networking.firewall.enable = true;
     networking.networkmanager.enable = true;
