@@ -41,6 +41,8 @@ in {
                 isSystemUser = true;
                 group = cfg.group;
                 extraGroups = [ "wheel" "lp" "scanner" "lpadmin" ]; # CUPS permissions
+                createHome = true;
+                home = "/home/aico-printnode";
             };
         };
 
