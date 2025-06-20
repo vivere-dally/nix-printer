@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
         cp ${elfutils.out}/lib/libdw.so.1 $out/lib/
         cp ${attr.out}/lib/libattr.so.1 $out/lib/
         # cp -r ${brotli.out}/lib/* $out/lib/
-        cp -r ${brotli.lib}/lib/ $out/lib/
+        cp -r ${brotli.lib}/lib/* $out/lib/
         
         # Symlink for the specific libattr version expected by the binary
         ln -sf $out/lib/libattr.so.1 $out/lib/libattr-4f2a9577.so.1.1.0
