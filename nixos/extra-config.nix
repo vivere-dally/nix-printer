@@ -1031,6 +1031,11 @@ IdleExitTimeout 60
 
     time.timeZone = "Europe/Zurich";
 
+    services.udev.extraRules = ''
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701??:*", ENV{ID_USB_INTERFACES}!="*:070104:*", TAG+="systemd", ENV{SYSTEMD_WANTS}="configure-printer@usb-$env{BUSNUM}-$env{DEVNUM}.service"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{INTERFACE}=="7/1/*", ENV{INTERFACE}!="7/1/4", RUN+="udev-configure-printer remove %p"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ACTION=="add", RUN+="${pkgs.cups}/lib/udev/udev-configure-printer add"
+    '';
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
     system.stateVersion = "25.05";
 }
