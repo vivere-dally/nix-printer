@@ -101,6 +101,11 @@
     hardware.printers = { ensurePrinters = []; };
     hardware.enableRedistributableFirmware = true;
 
+    # bluetooth
+    hardware.bluetooth.enable = true;
+    hardware.bluetooth.powerOnBoot = true;
+    services.blueman.enable = true;
+
     networking.firewall.enable = true;
     networking.networkmanager.enable = true;
 
