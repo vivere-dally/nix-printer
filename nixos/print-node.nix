@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, patchelf, openssl, glibc, zlib, libcap, elfutils, attr, dbus, gcc, zstd }:
+{ stdenv, lib, fetchurl, patchelf, openssl, glibc, zlib, libcap, elfutils, attr, dbus, gcc, zstd, brotli, makeWrapper }:
 stdenv.mkDerivation rec {
 
     pname = "PrintNode";
@@ -12,7 +12,7 @@ stdenv.mkDerivation rec {
     };
 
     dontBuild = true;
-    buildInputs = [ openssl glibc stdenv.cc.cc.lib zlib libcap elfutils attr dbus gcc zstd ];
+    buildInputs = [ openssl glibc stdenv.cc.cc.lib zlib libcap elfutils attr dbus gcc zstd brotli makeWrapper ];
 
     unpackPhase = ''
         mkdir -p $pname
@@ -30,6 +30,8 @@ stdenv.mkDerivation rec {
         cp ${libcap.lib}/lib/libcap.so.2 $out/lib/
         cp ${elfutils.out}/lib/libdw.so.1 $out/lib/
         cp ${attr.out}/lib/libattr.so.1 $out/lib/
+        # cp -r ${brotli.out}/lib/* $out/lib/
+        cp -r ${brotli.lib}/lib/ $out/lib/
         
         # Symlink for the specific libattr version expected by the binary
         ln -sf $out/lib/libattr.so.1 $out/lib/libattr-4f2a9577.so.1.1.0
@@ -67,14 +69,9 @@ stdenv.mkDerivation rec {
         # This preserves the original library loading behavior
         patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $out/PrintNode
         
-        # Create a wrapper script that sets the library path
+        # Use makeWrapper to create a proper wrapper script with LD_LIBRARY_PATH
         mkdir -p $out/bin
-        cat > $out/bin/PrintNode << EOF
-        #!${stdenv.shell}
-        export LD_LIBRARY_PATH="$out/lib:\$LD_LIBRARY_PATH"
-        exec "$out/PrintNode" "\$@"
-        EOF
-        chmod +x $out/bin/PrintNode
+        makeWrapper $out/PrintNode $out/bin/PrintNode --set LD_LIBRARY_PATH "$out/lib:$out/lib/hidapi.libs"
         
         # Debug info
         echo "=== Binary info ==="

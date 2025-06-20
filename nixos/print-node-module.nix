@@ -54,7 +54,7 @@ in {
             requires = [ "cups.service" ];
             wantedBy = [ "multi-user.target" ];
             serviceConfig = {
-                ExecStart = "${cfg.package}/bin/PrintNode --headless --shutdown-on-sigint";
+                ExecStart = "${cfg.package}/bin/PrintNode";
                 User = cfg.user;
                 Group = cfg.group;
                 Restart = "always";
