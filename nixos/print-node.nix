@@ -40,14 +40,7 @@ stdenv.mkDerivation rec {
 
         patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $out/PrintNode
         mkdir -p $out/bin
-        makeWrapper $out/PrintNode $out/bin/PrintNode --set LD_LIBRARY_PATH "$out/lib:$out/lib/hidapi.libs"
-
-        ln -s /run/current-system/sw/bin/lp /usr/bin/lp
-        ln -s /run/current-system/sw/bin/lpoptions /usr/bin/lpoptions
-        ln -s /run/current-system/sw/bin/lpstat /usr/bin/lpstat
-        ln -s /run/current-system/sw/bin/ipptool /usr/bin/ipptool
-        ln -s /run/current-system/sw/bin/lpr /usr/bin/lpr
-
+        makeWrapper $out/PrintNode $out/bin/PrintNode --set LD_LIBRARY_PATH "$out/lib:$out/lib/hidapi.libs:${cups.lib}"
     '';
 
     meta = with lib; {
