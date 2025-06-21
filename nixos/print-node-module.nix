@@ -140,5 +140,25 @@ done
     in "${script}";
             };
         };
+
+        systemd.services.aico-restarter = {
+            description = "Restart the services once since gods knows why.";
+            after = [ "print-node.service"  "aico-usbprinters.service" ];
+            wantedBy = [ "multi-user.target" ];
+            path = [ pkgs.cups ];
+            serviceConfig = {
+                Type = "oneshot";
+                User = "root";
+                StandardOutput = "journal";
+                StandardError = "journal";
+                RemainAfterExit = true;
+                ExecStart = let
+                    script = pkgs.writeShellScript "aico-restarter.sh" ''
+systemctl restart aico-usbprinters.service
+systemctl restart print-node.service
+       '';
+    in "${script}";
+            };
+        };
     };
 }
