@@ -72,13 +72,13 @@ in {
             after = [ "network.target" "cups.service" "print-node.service" ];
             requires = [ "cups.service" "print-node.service" ];
             wantedBy = [ "multi-user.target" ];
-            RemainAfterExit = true;
             serviceConfig = {
                 Type = "oneshot";
                 User = "root";
                 Group = "root";
                 StandardOutput = "journal";
                 StandardError = "journal";
+                RemainAfterExit = true;
                 ExecStart = "${pkgs.writeShellScript "aico-usbprinters.sh" ''
 #!/bin/bash
 exec 1>&2
