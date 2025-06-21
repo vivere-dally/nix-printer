@@ -21,7 +21,6 @@
         print-node
         udev
         systemd
-        system-config-printer
     ];
     programs.nix-ld.enable = true;
 
