@@ -48,7 +48,7 @@
 [network]
 [proxy]
 [computer]
-    name = "Aico PrintNode"
+    name = Aico PrintNode
 
 [development]
 [cups]
