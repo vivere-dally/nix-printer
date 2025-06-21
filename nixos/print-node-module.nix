@@ -40,7 +40,7 @@ in {
             aico-printnode = {
                 isSystemUser = true;
                 group = cfg.group;
-                extraGroups = [ "wheel" "lp" "scanner" "lpadmin" ]; # CUPS permissions
+                extraGroups = [ "wheel" "lp" "lpadmin" "scanner" ]; # CUPS permissions
                 createHome = true;
                 home = "/home/aico-printnode";
             };
@@ -58,12 +58,50 @@ in {
             wantedBy = [ "multi-user.target" ];
             serviceConfig = {
                 ExecStart = "${cfg.package}/bin/PrintNode";
-                User = cfg.user;
-                Group = cfg.group;
+                User = "root";
+                Group = "root";
                 Restart = "always";
                 RestartSec = 5;
                 StandardOutput = "journal";
                 StandardError = "journal";
+            };
+        };
+
+        systemd.services.aico-usbprinters = {
+            description = "Automatic USB printer detection and configuration";
+            after = [ "network.target" "cups.service" "print-node.service" ];
+            requires = [ "cups.service" "print-node.service" ];
+            wantedBy = [ "multi-user.target" ];
+            RemainAfterExit = true;
+            serviceConfig = {
+                Type = "oneshot";
+                User = "root";
+                Group = "root";
+                StandardOutput = "journal";
+                StandardError = "journal";
+                ExecStart = "${pkgs.writeShellScript "aico-usbprinters.sh" ''
+#!/bin/bash
+exec 1>&2
+lpinfo -v | grep usb:// | while read uri; do
+    read -r -a parts <<< "\$uri"
+    printerUri="\$parts[1]"
+    echo "Found USB printer: \$printerUri"
+                
+    name="\$(echo \"\$printerUri\" | sed 's|usb://||' | tr -d '/' | tr '_' '-')"
+    if ! lpstat -p "\$name"; then
+        echo "Adding printer: \$name"
+        if lpadmin -p "\$name" -E -v "\$printerUri" -m raw; then
+            cupsenable "\$name" || echo "Failed to enable \$name"
+            cupsaccept "\$name" || echo "Failed to accept jobs for \$name"
+            echo "Successfully added printer: \$name"
+        else
+            echo "Failed to add printer: \$name"
+        fi
+    else
+        echo "Printer \$name already exists"
+    fi
+done
+''}";
             };
         };
     };
