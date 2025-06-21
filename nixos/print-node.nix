@@ -42,12 +42,11 @@ stdenv.mkDerivation rec {
         mkdir -p $out/bin
         makeWrapper $out/PrintNode $out/bin/PrintNode --set LD_LIBRARY_PATH "$out/lib:$out/lib/hidapi.libs"
 
-        # if not this, then: ln -s \${cups.bin}
-        ln -s /run/current-system/sw/bin/lp
-        ln -s /run/current-system/sw/bin/lpoptions
-        ln -s /run/current-system/sw/bin/lpstat
-        ln -s /run/current-system/sw/bin/ipptool
-        ln -s /run/current-system/sw/bin/lpr
+        ln -s /run/current-system/sw/bin/lp /usr/bin/lp
+        ln -s /run/current-system/sw/bin/lpoptions /usr/bin/lpoptions
+        ln -s /run/current-system/sw/bin/lpstat /usr/bin/lpstat
+        ln -s /run/current-system/sw/bin/ipptool /usr/bin/ipptool
+        ln -s /run/current-system/sw/bin/lpr /usr/bin/lpr
 
     '';
 
