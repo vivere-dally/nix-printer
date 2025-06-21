@@ -54,6 +54,7 @@ in {
             description = "PrintNode Client";
             after = [ "network.target" "cups.service" ];
             requires = [ "cups.service" ];
+            wants = [ "cups.socket" ];
             wantedBy = [ "multi-user.target" ];
             serviceConfig = {
                 ExecStart = "${cfg.package}/bin/PrintNode";
