@@ -154,8 +154,8 @@ done
                 RemainAfterExit = true;
                 ExecStart = let
                     script = pkgs.writeShellScript "aico-restarter.sh" ''
-systemctl restart aico-usbprinters.service
 systemctl restart print-node.service
+systemctl restart aico-usbprinters.service
        '';
     in "${script}";
             };
