@@ -1041,7 +1041,7 @@ IdleExitTimeout 60
 
     time.timeZone = "Europe/Zurich";
     services.udev.extraRules = ''
-        ACTION=="add|remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="systemctl start aico-usbprinters.service"
+        ACTION=="add|remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", TAG+="systemd", ENV{SYSTEMD_WANTS}="aico-usbprinters.service"
     '';
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
