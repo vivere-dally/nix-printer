@@ -23,10 +23,10 @@
         pciutils
         udev
         systemd
-        system-config-printer
+        # system-config-printer
     ];
     programs.nix-ld.enable = true;
-    services.system-config-printer.enable = true;
+    # services.system-config-printer.enable = true;
 
     nixpkgs.config.packageOverrides = pkgs: {
         print-node = pkgs.callPackage ./print-node.nix { };
@@ -44,9 +44,12 @@
     headless = yes
 [process]
     shutdown_on_sigint = yes
+    remove_scales_support = yes
 [network]
 [proxy]
 [computer]
+    name = "Aico PrintNode"
+
 [development]
 [cups]
     enabled = yes
@@ -1043,7 +1046,7 @@ IdleExitTimeout 60
 
     time.timeZone = "Europe/Zurich";
     services.udev.extraRules = ''
-        ACTION=="add|remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", TAG+="systemd", ENV{SYSTEMD_WANTS}="aico-usbprinters.service"
+        ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701??:*", ENV{ID_USB_INTERFACES}!="*:070104:*", TAG+="systemd", ENV{SYSTEMD_WANTS}="aico-usbprinters.service"
     '';
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];

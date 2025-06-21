@@ -52,10 +52,11 @@ in {
 
         systemd.services.print-node = {
             description = "PrintNode Client";
-            after = [ "network.target" "cups.service" ];
-            requires = [ "cups.service" ];
+            after = [ "network.target" "cups.service" "cups.socket" ];
+            requires = [ "cups.service" "cups.socket" ];
             wants = [ "cups.socket" ];
             wantedBy = [ "multi-user.target" ];
+            path = [ pkgs.cups cfg.package ];
             serviceConfig = {
                 ExecStart = "${cfg.package}/bin/PrintNode";
                 User = "root";
@@ -66,50 +67,50 @@ in {
             };
         };
 
-        systemd.services.aico-usbprinters = {
-            description = "Automatic USB printer detection and configuration";
-            after = [ "network.target" "cups.service" "print-node.service" ];
-            requires = [ "cups.service" "print-node.service" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-                Type = "oneshot";
-                User = "root";
-                StandardOutput = "journal";
-                StandardError = "journal";
-                RemainAfterExit = true;
-                ExecStart = let
-                    script = pkgs.writeShellScript "auto-printer-setup.sh" ''
-export PATH=${pkgs.cups}/bin:$PATH
-
-lpinfo -v | grep usb:// | while read -r line; do
-    read -r -a parts <<< "$line"
-    printerUri="''${parts[1]}"
-    echo "Found USB printer: $printerUri"
-
-    name=$(echo "$printerUri" | sed \
-        -e 's|^usb://||' \
-        -e 's|?.*$||' \
-        -e 's|%20|_|g' \
-        -e 's|/|_|g' \
-        -e 's|[^[:alnum:]_-]|_|g')
-
-    echo "Generated printer name: $name"
-    if ! lpstat -p "$name" &>/dev/null; then
-        echo "Adding printer: $name"
-        if lpadmin -p "$name" -E -v "$printerUri" -m raw; then
-            cupsenable "$name" || echo "Failed to enable $name"
-            cupsaccept "$name" || echo "Failed to accept jobs for $name"
-            echo "Successfully added printer: $name"
-        else
-            echo "Failed to add printer: $name"
-        fi
-    else
-        echo "Printer $name already exists"
-    fi
-done
-      '';
-    in "${script}";
-            };
-        };
+         systemd.services.aico-usbprinters = {
+             description = "Automatic USB printer detection and configuration";
+             after = [ "network.target" "cups.service" "print-node.service" ];
+             requires = [ "cups.service" "print-node.service" ];
+             wantedBy = [ "multi-user.target" ];
+             serviceConfig = {
+                 Type = "oneshot";
+                 User = "root";
+                 StandardOutput = "journal";
+                 StandardError = "journal";
+                 RemainAfterExit = true;
+                 ExecStart = let
+                     script = pkgs.writeShellScript "auto-printer-setup.sh" ''
+ export PATH=${pkgs.cups}/bin:$PATH
+ 
+ lpinfo -v | grep usb:// | while read -r line; do
+     read -r -a parts <<< "$line"
+     printerUri="''${parts[1]}"
+     echo "Found USB printer: $printerUri"
+ 
+     name=$(echo "$printerUri" | sed \
+         -e 's|^usb://||' \
+         -e 's|?.*$||' \
+         -e 's|%20|_|g' \
+         -e 's|/|_|g' \
+         -e 's|[^[:alnum:]_-]|_|g')
+ 
+     echo "Generated printer name: $name"
+     if ! lpstat -p "$name" &>/dev/null; then
+         echo "Adding printer: $name"
+         if lpadmin -p "$name" -E -v "$printerUri" -m raw; then
+             cupsenable "$name" || echo "Failed to enable $name"
+             cupsaccept "$name" || echo "Failed to accept jobs for $name"
+             echo "Successfully added printer: $name"
+         else
+             echo "Failed to add printer: $name"
+         fi
+     else
+         echo "Printer $name already exists"
+     fi
+ done
+       '';
+     in "${script}";
+             };
+         };
     };
 }
