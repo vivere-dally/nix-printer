@@ -79,29 +79,32 @@ in {
                 StandardOutput = "journal";
                 StandardError = "journal";
                 RemainAfterExit = true;
-                ExecStart = "${pkgs.writeShellScript "aico-usbprinters.sh" ''
-#!/bin/bash
-exec 1>&2
-lpinfo -v | grep usb:// | while read uri; do
-    read -r -a parts <<< "\$uri"
-    printerUri="\$parts[1]"
-    echo "Found USB printer: \$printerUri"
-                
-    name="\$(echo \"\$printerUri\" | sed 's|usb://||' | tr -d '/' | tr '_' '-')"
-    if ! lpstat -p "\$name"; then
-        echo "Adding printer: \$name"
-        if lpadmin -p "\$name" -E -v "\$printerUri" -m raw; then
-            cupsenable "\$name" || echo "Failed to enable \$name"
-            cupsaccept "\$name" || echo "Failed to accept jobs for \$name"
-            echo "Successfully added printer: \$name"
+                ExecStart = let
+                    script = pkgs.writeShellScript "auto-printer-setup.sh" ''
+export PATH=${pkgs.cups}/bin:$PATH
+
+lpinfo -v | grep usb:// | while read -r line; do
+    read -r -a parts <<< "$line"
+    printerUri="''${parts[1]}"
+    echo "Found USB printer: $printerUri"
+
+    # Generate safe printer name
+    name="$(echo "$printerUri" | sed 's|usb://||' | tr -d '/' | tr '_' '-')"
+    if ! lpstat -p "$name" &>/dev/null; then
+        echo "Adding printer: $name"
+        if lpadmin -p "$name" -E -v "$printerUri" -m raw; then
+            cupsenable "$name" || echo "Failed to enable $name"
+            cupsaccept "$name" || echo "Failed to accept jobs for $name"
+            echo "Successfully added printer: $name"
         else
-            echo "Failed to add printer: \$name"
+            echo "Failed to add printer: $name"
         fi
     else
-        echo "Printer \$name already exists"
+        echo "Printer $name already exists"
     fi
 done
-''}";
+      '';
+    in "${script}";
             };
         };
     };
