@@ -59,7 +59,6 @@ in {
             serviceConfig = {
                 ExecStart = "${cfg.package}/bin/PrintNode";
                 User = "root";
-                Group = "root";
                 Restart = "always";
                 RestartSec = 5;
                 StandardOutput = "journal";
@@ -75,7 +74,6 @@ in {
             serviceConfig = {
                 Type = "oneshot";
                 User = "root";
-                Group = "root";
                 StandardOutput = "journal";
                 StandardError = "journal";
                 RemainAfterExit = true;
@@ -88,8 +86,14 @@ lpinfo -v | grep usb:// | while read -r line; do
     printerUri="''${parts[1]}"
     echo "Found USB printer: $printerUri"
 
-    # Generate safe printer name
-    name="$(echo "$printerUri" | sed 's|usb://||' | tr -d '/' | tr '_' '-')"
+    name=$(echo "$printerUri" | sed \
+        -e 's|^usb://||' \
+        -e 's|?.*$||' \
+        -e 's|%20|_|g' \
+        -e 's|/|_|g' \
+        -e 's|[^[:alnum:]_-]|_|g')
+
+    echo "Generated printer name: $name"
     if ! lpstat -p "$name" &>/dev/null; then
         echo "Adding printer: $name"
         if lpadmin -p "$name" -E -v "$printerUri" -m raw; then

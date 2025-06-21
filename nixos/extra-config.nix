@@ -23,8 +23,10 @@
         pciutils
         udev
         systemd
+        system-config-printer
     ];
     programs.nix-ld.enable = true;
+    services.system-config-printer.enable = true;
 
     nixpkgs.config.packageOverrides = pkgs: {
         print-node = pkgs.callPackage ./print-node.nix { };
