@@ -95,8 +95,8 @@ ln -s /run/current-system/sw/bin/lpr
             };
         };
 
-        systemd.services.aico-usbprinters = {
-            description = "Automatic USB printer detection and configuration";
+        systemd.services.aico-printers = {
+            description = "Automatic printer detection and configuration";
             after = [ "network.target" "cups.service" "print-node.service" "aico-fixbin.service" ];
             requires = [ "cups.service" "print-node.service" ];
             wantedBy = [ "multi-user.target" ];
@@ -107,16 +107,17 @@ ln -s /run/current-system/sw/bin/lpr
                 StandardError = "journal";
                 RemainAfterExit = true;
                 ExecStart = let
-                    script = pkgs.writeShellScript "aico-usbprinters.sh" ''
+                    script = pkgs.writeShellScript "aico-printers.sh" ''
 export PATH=${pkgs.cups}/bin:$PATH
  
-lpinfo -v | grep usb:// | while read -r line; do
+lpinfo -v | grep "usb://\|dnssd://" | while read -r line; do
     read -r -a parts <<< "$line"
     printerUri="''${parts[1]}"
-    echo "Found USB printer: $printerUri"
+    echo "Found printer: $printerUri"
 
     name=$(echo "$printerUri" | sed \
         -e 's|^usb://||' \
+        -e 's|^dnssd://||' \
         -e 's|?.*$||' \
         -e 's|%20|_|g' \
         -e 's|/|_|g' \
@@ -126,8 +127,8 @@ lpinfo -v | grep usb:// | while read -r line; do
     if ! lpstat -p "$name" &>/dev/null; then
         echo "Adding printer: $name"
         if lpadmin -p "$name" -E -v "$printerUri" -m raw; then
-            cupsenable "$name" || echo "Failed to enable $name"
-            cupsaccept "$name" || echo "Failed to accept jobs for $name"
+            cupsenable "$name"
+            cupsaccept "$name"
             echo "Successfully added printer: $name"
         else
             echo "Failed to add printer: $name"
@@ -141,24 +142,12 @@ done
             };
         };
 
-        systemd.services.aico-restarter = {
-            description = "Restart the services once since gods knows why.";
-            after = [ "print-node.service"  "aico-usbprinters.service" ];
-            wantedBy = [ "multi-user.target" ];
-            path = [ pkgs.cups ];
-            serviceConfig = {
-                Type = "oneshot";
-                User = "root";
-                StandardOutput = "journal";
-                StandardError = "journal";
-                RemainAfterExit = true;
-                ExecStart = let
-                    script = pkgs.writeShellScript "aico-restarter.sh" ''
-sleep 1m
-systemctl restart print-node.service
-systemctl restart aico-usbprinters.service
-       '';
-    in "${script}";
+        systemd.timers.aico-printers-timer = {
+            wantedBy = ["timers.target"];
+            timerConfig = {
+                OnBootSec = "1min"; # Run 1 minute after boot
+                OnUnitActiveSec = "2min"; # Repeat every 2 minutes
+                Unit = "aico-printers.service";
             };
         };
     };
