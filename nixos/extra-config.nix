@@ -1039,6 +1039,8 @@ IdleExitTimeout 60
 
     networking.firewall.enable = false;
     networking.networkmanager.enable = true;
+    networking.wireless.enable = true;
+    networking.networkmanager.wifi.powersave = false;
     services.blueman.enable = true;
 
     hardware.bluetooth.enable = true;
@@ -1051,4 +1053,7 @@ IdleExitTimeout 60
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
     system.stateVersion = "25.05";
+    
+    boot.loader.grub.enable = false;
+    boot.loader.generic-extlinux-compatible.enable = true;
 }
