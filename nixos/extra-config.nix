@@ -57,6 +57,17 @@
     services.printing = {
         enable = true;
         openFirewall = true; 
+        drivers = with pkgs; [
+            gutenprint
+            hplip
+            postscript-lexmark
+            samsung-unified-linux-driver
+            splix
+            brlaser
+            epson-escpr
+            epson-escpr2
+        ];
+
         browsed.enable = true;
         browsedConf = ''
 # Which protocols will we use to discover printers on the network?
@@ -71,9 +82,13 @@ BrowseRemoteProtocols dnssd
 BrowseLocalProtocols dnssd
         '';
 
+        defaultShared = true;
         extraConf = ''
 Browsing Yes
 BrowseLocalProtocols dnssd
+BrowseRemoteProtocols dnssd
+CreateIPPPrinterQueues Yes
+PrinterDiscovery on
 
 # Default authentication type, when authentication is required...
 DefaultAuthType Basic

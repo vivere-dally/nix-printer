@@ -105,7 +105,6 @@ ln -s /run/current-system/sw/bin/lpr
                 User = "root";
                 StandardOutput = "journal";
                 StandardError = "journal";
-                RemainAfterExit = true;
                 ExecStart = let
                     script = pkgs.writeShellScript "aico-printers.sh" ''
 export PATH=${pkgs.cups}/bin:$PATH
@@ -142,8 +141,8 @@ done
             };
         };
 
-        systemd.timers.aico-printers-timer = {
-            wantedBy = ["timers.target"];
+        systemd.timers.aico-printers = {
+            wantedBy = ["multi-user.target"];
             timerConfig = {
                 OnBootSec = "1min"; # Run 1 minute after boot
                 OnUnitActiveSec = "2min"; # Repeat every 2 minutes
