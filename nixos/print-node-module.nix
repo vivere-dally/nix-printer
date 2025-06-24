@@ -149,5 +149,25 @@ done
                 Unit = "aico-printers.service";
             };
         };
+
+        systemd.services.aico-internet-trigger = {
+            description = "Run action when internet is connected";
+            after = [ "network.target" "network-online.target" ];
+            wants = [ "network-online.target" ];
+            wantedBy = [ "multi-user.target" ];
+            serviceConfig = {
+                Type = "oneshot";
+                User = "root";
+                StandardOutput = "journal";
+                StandardError = "journal";
+                ExecStart = let
+                    script = pkgs.writeShellScript "aico-internet-trigger.sh" ''
+systemctl restart aico-printers.service
+systemctl restart aico-printers.timer
+systemctl restart print-node.service
+        '';
+    in "${script}";
+            };
+        };
     };
 }
